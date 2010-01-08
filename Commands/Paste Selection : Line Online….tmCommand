@@ -13,6 +13,7 @@ SUPPORT_PATH = ENV['TM_SUPPORT_PATH']
 PASTE_URL = ENV['TM_PASTIE_URL'] || 'http://pastie.textmate.org/pastes'
 
 require "#{BUNDLE_SUPPORT}/lib/doctohtml.rb"
+require "#{BUNDLE_SUPPORT}/lib/update_pastie_cookie.rb"
 require "#{SUPPORT_PATH}/lib/textmate"
 require "#{SUPPORT_PATH}/lib/tm/detach"
 require "#{SUPPORT_PATH}/lib/progress"
@@ -258,6 +259,10 @@ TextMate.detach {
     if url = paste_stdin(priv, wrap)
       dests = Iconv.iconv('mac', 'utf-8', dests) if %x{ defaults read /System/Library/CoreServices/SystemVersion ProductVersion } =~ /\A10\.4/
       %x{ osascript #{e_sh temp_script(BUNDLE_SUPPORT + "/paste_to_destinations.scpt")} #{e_sh url} #{e_sh dests} }
+      # Update the pastie cookie with this paste id
+      if (pastie_id = url[%r{/(\d+)}, 1])
+        UpdatePastieCookie.with pastie_id
+      end
     end
   end
 }
